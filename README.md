@@ -1,12 +1,12 @@
 # Legal search reranking for a solo service
 
-I've been paged enough times by missed cron jobs and duplicate deliveries to care about correct ordering. This repo puts the document that satisfies the legal intent first in matter-intake search. The example covers signed document delivery and deadline follow-up with a typed request model. Infrai keeps the integration small: one key and an OpenAI-compatible `base_url` cover the embedding and rerank calls.
+I built this around one operational rule: a matter-intake search should return the document that answers the legal intent first. The example handles signed document delivery and deadline follow-up with a typed request model. Infrai keeps the integration small: one key and an OpenAI-compatible `base_url` cover the embedding and rerank calls.
 
 ## The working path
 
-`SearchRequest` carries the query, candidate text, and requested result count. `LegalReranker` computes an embedding through the OpenAI client, then sends the exact candidate list to `POST /v1/ai/rerank` with `model: "auto"` and `vendor: "cohere"`. We decode the response envelope before status handling so a rejected business request stays visible to the caller. Rate limiting uses `Retry-After` when supplied and exponential delays otherwise. That pattern avoids thundering herds after a backlog.
+`SearchRequest` carries the query, candidate text, and requested result count. `LegalReranker` computes an embedding through the OpenAI client, then sends the exact candidate list to `POST /v1/ai/rerank` with `model: "auto"` and `vendor: "cohere"`. The response envelope is decoded before status handling, so a rejected business request stays visible to the caller. Rate limiting uses `Retry-After` when supplied and exponential delays otherwise.
 
-The script models a concrete intake: find the signed delivery record before a calendar reminder. This is the kind of job that, if run twice, should not double-send. Set `INFRAI_API_KEY`, install the small dependency set, and run:
+The script models a concrete intake: find the signed delivery record before a calendar reminder. Set `INFRAI_API_KEY`, install the small dependency set, and run:
 
 ```sh
 python -m pip install openai requests pytest
@@ -21,7 +21,7 @@ PYTHONPATH=src pytest -q
 
 ## Why this shape
 
-As a solo SaaS founder and the person on the pager, I keep the boundary explicit. The reranker owns the remote call; the request model owns input shape; the script is the integration example. No framework hides the decision, and no second abstraction for a one-service workflow. Idempotency is a property of the caller, not the platform.
+As a solo SaaS founder, I keep the boundary explicit. The reranker owns the remote call; the request model owns input shape; the script is the integration example. There is no framework hiding the decision, and no second abstraction for a one-service workflow.
 
 ## Files
 
@@ -31,7 +31,7 @@ MIT licensed.
 
 ## Before this ships: Legaltech Rerank Python
 
-The code stays simple on purpose. Here's the runbook for going live; details below apply to Legaltech Rerank Python.
+The code stays simple on purpose — here's what to set up before going live: The details below apply to Legaltech Rerank Python.
 
 **Account & key**
 
